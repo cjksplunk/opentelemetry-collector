@@ -64,12 +64,13 @@ func (cm *ConfigProvider) Get(ctx context.Context, factories Factories) (*Config
 	}
 
 	return &Config{
-		Receivers:  cfg.Receivers.Configs(),
-		Processors: cfg.Processors.Configs(),
-		Exporters:  cfg.Exporters.Configs(),
-		Connectors: cfg.Connectors.Configs(),
-		Extensions: cfg.Extensions.Configs(),
-		Service:    cfg.Service,
+		Receivers:     cfg.Receivers.Configs(),
+		ReceiverTags:  cfg.Receivers.Tags(),
+		Processors:    cfg.Processors.Configs(),
+		Exporters:     cfg.Exporters.Configs(),
+		Connectors:    cfg.Connectors.Configs(),
+		Extensions:    cfg.Extensions.Configs(),
+		Service:       cfg.Service,
 	}, nil
 }
 

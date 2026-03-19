@@ -170,6 +170,57 @@ func TestReceiverBuilderMissingConfig(t *testing.T) {
 	assert.Nil(t, pe)
 }
 
+func TestReceiverBuilderWithTags(t *testing.T) {
+	defaultCfg := struct{}{}
+
+	// These factory funcs capture the consumer passed to them so the test can
+	// assert that tagsconsumer wrapping occurred (MutatesData: true).
+	var capturedTraces consumer.Traces
+	var capturedMetrics consumer.Metrics
+	var capturedLogs consumer.Logs
+
+	factories, err := otelcol.MakeFactoryMap([]receiver.Factory{
+		xreceiver.NewFactory(
+			component.MustNewType("tagged"),
+			func() component.Config { return &defaultCfg },
+			xreceiver.WithTraces(func(_ context.Context, _ receiver.Settings, _ component.Config, next consumer.Traces) (receiver.Traces, error) {
+				capturedTraces = next
+				return nopReceiverInstance, nil
+			}, component.StabilityLevelDevelopment),
+			xreceiver.WithMetrics(func(_ context.Context, _ receiver.Settings, _ component.Config, next consumer.Metrics) (receiver.Metrics, error) {
+				capturedMetrics = next
+				return nopReceiverInstance, nil
+			}, component.StabilityLevelAlpha),
+			xreceiver.WithLogs(func(_ context.Context, _ receiver.Settings, _ component.Config, next consumer.Logs) (receiver.Logs, error) {
+				capturedLogs = next
+				return nopReceiverInstance, nil
+			}, component.StabilityLevelDeprecated),
+		),
+	}...)
+	require.NoError(t, err)
+
+	id := component.MustNewID("tagged")
+	tags := map[component.ID]map[string]string{
+		id: {"env": "prod", "region": "us-east-1"},
+	}
+	cfgs := map[component.ID]component.Config{id: defaultCfg}
+	b := builders.NewReceiver(cfgs, factories, builders.WithReceiverTags(tags))
+
+	// The consumer passed to each factory should be wrapped by tagsconsumer,
+	// which declares MutatesData: true. A plain consumertest.NewNop() has MutatesData: false.
+	_, err = b.CreateTraces(context.Background(), settings(id), consumertest.NewNop())
+	require.NoError(t, err)
+	assert.True(t, capturedTraces.Capabilities().MutatesData, "traces consumer should be wrapped by tagsconsumer")
+
+	_, err = b.CreateMetrics(context.Background(), settings(id), consumertest.NewNop())
+	require.NoError(t, err)
+	assert.True(t, capturedMetrics.Capabilities().MutatesData, "metrics consumer should be wrapped by tagsconsumer")
+
+	_, err = b.CreateLogs(context.Background(), settings(id), consumertest.NewNop())
+	require.NoError(t, err)
+	assert.True(t, capturedLogs.Capabilities().MutatesData, "logs consumer should be wrapped by tagsconsumer")
+}
+
 func TestReceiverBuilderFactory(t *testing.T) {
 	factories, err := otelcol.MakeFactoryMap([]receiver.Factory{receiver.NewFactory(component.MustNewType("foo"), nil)}...)
 	require.NoError(t, err)

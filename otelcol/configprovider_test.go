@@ -53,6 +53,7 @@ func TestConfigProvider(t *testing.T) {
 				Receivers: map[component.ID]component.Config{
 					nopComponentID: receivertest.NewNopFactory().CreateDefaultConfig(),
 				},
+				ReceiverTags: map[component.ID]map[string]string{},
 				Service: service.Config{
 					Telemetry:  fakeTelemetryConfig{},
 					Extensions: []component.ID{nopComponentID},

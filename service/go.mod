@@ -22,6 +22,7 @@ require (
 	go.opentelemetry.io/collector/consumer v1.54.0
 	go.opentelemetry.io/collector/consumer/consumererror v0.148.0
 	go.opentelemetry.io/collector/consumer/consumertest v0.148.0
+	go.opentelemetry.io/collector/consumer/tagsconsumer v0.148.0
 	go.opentelemetry.io/collector/consumer/xconsumer v0.148.0
 	go.opentelemetry.io/collector/exporter v1.54.0
 	go.opentelemetry.io/collector/exporter/exportertest v0.148.0
@@ -211,6 +212,8 @@ replace go.opentelemetry.io/collector/pdata/pprofile => ../pdata/pprofile
 replace go.opentelemetry.io/collector/consumer/xconsumer => ../consumer/xconsumer
 
 replace go.opentelemetry.io/collector/consumer/consumertest => ../consumer/consumertest
+
+replace go.opentelemetry.io/collector/consumer/tagsconsumer => ../consumer/tagsconsumer
 
 replace go.opentelemetry.io/collector/client => ../client
 

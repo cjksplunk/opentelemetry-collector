@@ -51,6 +51,10 @@ type Settings struct {
 	// Receivers configuration to its builder.
 	ReceiversConfigs   map[component.ID]component.Config
 	ReceiversFactories map[component.Type]receiver.Factory
+	// ReceiversTags are per-receiver resource attribute tags extracted from the
+	// receivers config's "tags:" block. When set, they are stamped on all
+	// telemetry produced by each receiver.
+	ReceiversTags map[component.ID]map[string]string
 
 	// Processors configuration to its builder.
 	ProcessorsConfigs   map[component.ID]component.Config
@@ -112,7 +116,7 @@ func New(ctx context.Context, set Settings, cfg Config) (_ *Service, resultErr e
 	srv := &Service{
 		buildInfo: set.BuildInfo,
 		host: &graph.Host{
-			Receivers:  builders.NewReceiver(set.ReceiversConfigs, set.ReceiversFactories),
+			Receivers:  builders.NewReceiver(set.ReceiversConfigs, set.ReceiversFactories, builders.WithReceiverTags(set.ReceiversTags)),
 			Processors: builders.NewProcessor(set.ProcessorsConfigs, set.ProcessorsFactories),
 			Exporters:  builders.NewExporter(set.ExportersConfigs, set.ExportersFactories),
 			Connectors: builders.NewConnector(set.ConnectorsConfigs, set.ConnectorsFactories),
@@ -355,7 +359,7 @@ func Validate(ctx context.Context, set Settings, cfg Config) error {
 	_, err := graph.Build(ctx, graph.Settings{
 		Telemetry:        tel,
 		BuildInfo:        set.BuildInfo,
-		ReceiverBuilder:  builders.NewReceiver(set.ReceiversConfigs, set.ReceiversFactories),
+		ReceiverBuilder:  builders.NewReceiver(set.ReceiversConfigs, set.ReceiversFactories, builders.WithReceiverTags(set.ReceiversTags)),
 		ProcessorBuilder: builders.NewProcessor(set.ProcessorsConfigs, set.ProcessorsFactories),
 		ExporterBuilder:  builders.NewExporter(set.ExportersConfigs, set.ExportersFactories),
 		ConnectorBuilder: builders.NewConnector(set.ConnectorsConfigs, set.ConnectorsFactories),

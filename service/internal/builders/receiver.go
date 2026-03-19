@@ -7,8 +7,11 @@ import (
 	"context"
 	"fmt"
 
+	"go.uber.org/zap"
+
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer"
+	"go.opentelemetry.io/collector/consumer/tagsconsumer"
 	"go.opentelemetry.io/collector/consumer/xconsumer"
 	"go.opentelemetry.io/collector/pipeline"
 	"go.opentelemetry.io/collector/receiver"
@@ -20,13 +23,29 @@ import (
 // Factories helps with creating receivers.
 type ReceiverBuilder struct {
 	cfgs      map[component.ID]component.Config
+	tags      map[component.ID]map[string]string
 	factories map[component.Type]receiver.Factory
+}
+
+// ReceiverBuilderOption is a functional option for ReceiverBuilder.
+type ReceiverBuilderOption func(*ReceiverBuilder)
+
+// WithReceiverTags sets per-receiver tags that will be stamped as resource
+// attributes on all telemetry produced by the receiver.
+func WithReceiverTags(tags map[component.ID]map[string]string) ReceiverBuilderOption {
+	return func(b *ReceiverBuilder) {
+		b.tags = tags
+	}
 }
 
 // NewReceiver creates a new ReceiverBuilder to help with creating
 // components form a set of configs and factories.
-func NewReceiver(cfgs map[component.ID]component.Config, factories map[component.Type]receiver.Factory) *ReceiverBuilder {
-	return &ReceiverBuilder{cfgs: cfgs, factories: factories}
+func NewReceiver(cfgs map[component.ID]component.Config, factories map[component.Type]receiver.Factory, opts ...ReceiverBuilderOption) *ReceiverBuilder {
+	b := &ReceiverBuilder{cfgs: cfgs, factories: factories}
+	for _, opt := range opts {
+		opt(b)
+	}
+	return b
 }
 
 // CreateTraces creates a Traces receiver based on the settings and config.
@@ -46,6 +65,12 @@ func (b *ReceiverBuilder) CreateTraces(ctx context.Context, set receiver.Setting
 
 	logDeprecatedTypeAlias(set.Logger, f, set.ID.Type())
 	logStabilityLevel(set.Logger, f.TracesStability())
+	if len(b.tags) > 0 {
+		if tags := b.tags[set.ID]; len(tags) > 0 {
+			set.Logger.Debug("applying receiver tags to traces", zap.Any("tags", tags))
+			next = tagsconsumer.NewTraces(next, tags)
+		}
+	}
 	return f.CreateTraces(ctx, set, cfg, next)
 }
 
@@ -66,6 +91,12 @@ func (b *ReceiverBuilder) CreateMetrics(ctx context.Context, set receiver.Settin
 
 	logDeprecatedTypeAlias(set.Logger, f, set.ID.Type())
 	logStabilityLevel(set.Logger, f.MetricsStability())
+	if len(b.tags) > 0 {
+		if tags := b.tags[set.ID]; len(tags) > 0 {
+			set.Logger.Debug("applying receiver tags to metrics", zap.Any("tags", tags))
+			next = tagsconsumer.NewMetrics(next, tags)
+		}
+	}
 	return f.CreateMetrics(ctx, set, cfg, next)
 }
 
@@ -86,6 +117,12 @@ func (b *ReceiverBuilder) CreateLogs(ctx context.Context, set receiver.Settings,
 
 	logDeprecatedTypeAlias(set.Logger, f, set.ID.Type())
 	logStabilityLevel(set.Logger, f.LogsStability())
+	if len(b.tags) > 0 {
+		if tags := b.tags[set.ID]; len(tags) > 0 {
+			set.Logger.Debug("applying receiver tags to logs", zap.Any("tags", tags))
+			next = tagsconsumer.NewLogs(next, tags)
+		}
+	}
 	return f.CreateLogs(ctx, set, cfg, next)
 }
 

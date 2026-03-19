@@ -214,6 +214,7 @@ func (col *Collector) setupConfigurationComponents(ctx context.Context) error {
 
 		ReceiversConfigs:    cfg.Receivers,
 		ReceiversFactories:  factories.Receivers,
+		ReceiversTags:       cfg.ReceiverTags,
 		ProcessorsConfigs:   cfg.Processors,
 		ProcessorsFactories: factories.Processors,
 		ExportersConfigs:    cfg.Exporters,
@@ -296,6 +297,7 @@ func (col *Collector) DryRun(ctx context.Context) error {
 		BuildInfo:           col.set.BuildInfo,
 		ReceiversConfigs:    cfg.Receivers,
 		ReceiversFactories:  factories.Receivers,
+		ReceiversTags:       cfg.ReceiverTags,
 		ProcessorsConfigs:   cfg.Processors,
 		ProcessorsFactories: factories.Processors,
 		ExportersConfigs:    cfg.Exporters,

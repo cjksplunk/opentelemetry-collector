@@ -36,7 +36,7 @@ func unmarshal(v *confmap.Conf, factories Factories) (*configSettings, error) {
 
 	// Unmarshal top level sections and validate.
 	cfg := &configSettings{
-		Receivers:  configunmarshaler.NewConfigs(factories.Receivers),
+		Receivers:  configunmarshaler.NewReceiverConfigs(factories.Receivers),
 		Processors: configunmarshaler.NewConfigs(factories.Processors),
 		Exporters:  configunmarshaler.NewConfigs(factories.Exporters),
 		Connectors: configunmarshaler.NewConfigs(factories.Connectors),

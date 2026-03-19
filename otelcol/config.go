@@ -22,6 +22,9 @@ var (
 type Config struct {
 	// Receivers is a map of ComponentID to Receivers.
 	Receivers map[component.ID]component.Config `mapstructure:"receivers"`
+	// ReceiverTags holds per-receiver resource attribute tags extracted from
+	// each receiver's "tags:" config block.
+	ReceiverTags map[component.ID]map[string]string `mapstructure:"-"`
 
 	// Exporters is a map of ComponentID to Exporters.
 	Exporters map[component.ID]component.Config `mapstructure:"exporters"`
