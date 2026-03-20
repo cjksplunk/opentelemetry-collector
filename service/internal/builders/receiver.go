@@ -127,6 +127,7 @@ func (b *ReceiverBuilder) CreateLogs(ctx context.Context, set receiver.Settings,
 }
 
 // CreateProfiles creates a Profiles receiver based on the settings and config.
+// TODO: apply receiver tags to profiles consumers once tagsconsumer.NewProfiles is implemented.
 func (b *ReceiverBuilder) CreateProfiles(ctx context.Context, set receiver.Settings, next xconsumer.Profiles) (xreceiver.Profiles, error) {
 	if next == nil {
 		return nil, errNilNextConsumer
